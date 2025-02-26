@@ -7,16 +7,3 @@ export interface Participant {
     isSpeaking: boolean
 }
 
-export interface ChatMessage {
-    id: string
-    sender: string
-    message: string
-    timestamp: Date
-}
-
-export interface Translation {
-    text: string
-    language: string
-    timestamp: Date
-}
-

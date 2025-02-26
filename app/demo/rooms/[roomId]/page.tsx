@@ -1,10 +1,9 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import {useParams, useSearchParams} from "next/navigation"
+import { useSearchParams} from "next/navigation"
 import { DailyProvider } from "@daily-co/daily-react"
 import VideoRoom from "@/components/video-room"
-import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function RoomPage({params}) {
@@ -37,7 +36,6 @@ export default function RoomPage({params}) {
                 if (data.error) {
                     throw new Error(data.error)
                 }
-                console.log(data);
                 setToken(data.token)
             })
             .catch((err) => {
@@ -66,18 +64,7 @@ export default function RoomPage({params}) {
 
     return (
         <DailyProvider url={url} token={token}>
-            <VideoRoom userName={name || "Guest"} />
-            <div className="fixed bottom-4 left-4 z-50">
-                <Button
-                    onClick={() => {
-                        const shareUrl = `${window.location.origin}?roomId=${roomId}`
-                        navigator.clipboard.writeText(shareUrl)
-                        alert("Room link copied to clipboard!")
-                    }}
-                >
-                    Share Room Link
-                </Button>
-            </div>
+            <VideoRoom roomName="Meeting" userName={name || "Guest"} />
         </DailyProvider>
     )
 }

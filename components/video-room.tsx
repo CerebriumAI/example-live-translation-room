@@ -1,20 +1,20 @@
 "use client"
 
 import React, { useState, useCallback } from "react"
-import { useParticipantIds, useScreenShare, useDailyEvent, useLocalSessionId, useDaily } from "@daily-co/daily-react"
+import { useParticipantIds, useDailyEvent, useLocalSessionId, useDaily } from "@daily-co/daily-react"
 import { UserMediaError } from "./user-media-error"
 import { Tile } from "./tile"
 import { Controls } from "./controls"
+import { RoomHeader } from "./room-header"
 import { useRoomStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
 
-export default function VideoRoom({ userName }: { userName: string }) {
+export default function VideoRoom({ userName, roomName }: { userName: string; roomName: string }) {
     const [getUserMediaError, setGetUserMediaError] = useState(false)
     const daily = useDaily()
-    const { screens } = useScreenShare()
-    const remoteParticipantIds = useParticipantIds({ filter: "remote" })
+    const participantIds = useParticipantIds()
     const localSessionId = useLocalSessionId()
-    const isAlone = remoteParticipantIds.length < 1 && screens.length < 1
+    const { activeSpeakerId, setActiveSpeaker } = useRoomStore()
 
     // Handle camera/microphone errors
     useDailyEvent(
@@ -22,6 +22,17 @@ export default function VideoRoom({ userName }: { userName: string }) {
         useCallback(() => {
             setGetUserMediaError(true)
         }, []),
+    )
+
+    // Handle active speaker updates
+    useDailyEvent(
+        "active-speaker-change",
+        useCallback(
+            (event) => {
+                setActiveSpeaker(event?.activeSpeaker?.peerId || null)
+            },
+            [setActiveSpeaker],
+        ),
     )
 
     // Join the room when the component mounts
@@ -45,41 +56,28 @@ export default function VideoRoom({ userName }: { userName: string }) {
         }
     }, [daily, userName])
 
-    const renderCallScreen = () => (
-        <div className="h-screen flex flex-col bg-background">
-            <main
-                className={cn(
-                    "flex-1 relative p-4",
-                    screens.length > 0 ? "grid grid-cols-4 gap-4" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4",
-                )}
-            >
-                {/* Local participant tile */}
-                {localSessionId && <Tile id={localSessionId} isLocal isAlone={isAlone} />}
+    const getGridLayout = (count: number) => {
+        if (count <= 1) return "grid-cols-1"
+        if (count === 2) return "grid-cols-2"
+        if (count <= 4) return "grid-cols-2 grid-rows-2"
+        if (count <= 6) return "grid-cols-3 grid-rows-2"
+        if (count <= 9) return "grid-cols-3 grid-rows-3"
+        return "grid-cols-4 grid-rows-3" // Max 12 participants
+    }
 
-                {/* Remote participants and screen shares */}
-                {remoteParticipantIds.length > 0 || screens.length > 0 ? (
-                    <>
-                        {remoteParticipantIds.map((id) => (
-                            <Tile key={id} id={id} />
-                        ))}
-                        {screens.map((screen) => (
-                            <Tile key={screen.screenId} id={screen.session_id} isScreenShare />
-                        ))}
-                    </>
-                ) : (
-                    <div className="col-span-full flex items-center justify-center">
-                        <div className="max-w-md text-center space-y-4 p-8 rounded-lg bg-muted/50">
-                            <h1 className="text-2xl font-semibold">Waiting for others</h1>
-                            <p className="text-muted-foreground">Invite someone by sharing this link:</p>
-                            <div className="p-2 bg-background rounded-lg">
-                                <p className="text-sm font-mono break-all">{window.location.href}</p>
-                            </div>
-                        </div>
-                    </div>
-                )}
+    const renderCallScreen = () => (
+        <div className="h-screen flex flex-col overflow-hidden ">
+            <RoomHeader roomName={roomName} />
+
+            <main className="flex-1 min-h-0 p-4">
+                <div className={cn("grid gap-4 h-full", getGridLayout(participantIds.length))}>
+                    {participantIds.map((id) => (
+                        <Tile key={id} id={id} isLocal={id === localSessionId} isActive={id === activeSpeakerId} />
+                    ))}
+                </div>
             </main>
 
-            <Controls className="h-16 border-t" />
+            <Controls className="flex-none h-16" />
         </div>
     )
 
