@@ -62,7 +62,7 @@ export default function JoinPage() {
         setError("")
 
         try {
-            const response = await fetch(`/api/rooms/${data.roomId}/validate`)
+            const response = await fetch(`/api/rooms/${data.roomId}`)
             const responseData = await response.json()
 
             if (!response.ok || !responseData.valid) {

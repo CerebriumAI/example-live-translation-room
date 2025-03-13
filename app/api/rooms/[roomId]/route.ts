@@ -4,7 +4,7 @@ import { roomIdSchema } from "@/lib/schemas"
 const DAILY_API_URL = "https://api.daily.co/v1"
 
 export async function GET(request: Request, { params }: { params: { roomId: string } }) {
-    const result = roomIdSchema.safeParse(params.roomId)
+    const result = roomIdSchema.safeParse(await params.roomId)
 
     if (!result.success) {
         const errorMessage = result.error.issues.map((issue) => issue.message).join(", ")

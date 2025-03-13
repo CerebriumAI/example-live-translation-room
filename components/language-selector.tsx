@@ -2,9 +2,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useRoomStore } from "@/lib/store"
 
 const languages = [
-    { code: "en", name: "English" },
     { code: "es", name: "Spanish" },
-    { code: "fr", name: "French" },
 ] as const
 
 export function LanguageSelector() {

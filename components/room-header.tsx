@@ -8,9 +8,16 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 export function RoomHeader({ roomName }: { roomName: string }) {
     const participantIds = useParticipantIds()
 
-    const copyRoomLink = () => {
-        navigator.clipboard.writeText(window.location.href)
-        toast.success("Room link copied to clipboard")
+    // Extract the room ID from the current URL
+    const getRoomId = () => {
+        const pathParts = window.location.pathname.split('/')
+        return pathParts[pathParts.length - 1]
+    }
+
+    const copyRoomId = () => {
+        const roomId = getRoomId()
+        navigator.clipboard.writeText(roomId)
+        toast.success("Room ID copied to clipboard")
     }
 
     return (
@@ -32,13 +39,18 @@ export function RoomHeader({ roomName }: { roomName: string }) {
                     <PopoverContent className="w-80">
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <h3 className="font-medium">Room Link</h3>
+                                <h3 className="font-medium">Room ID</h3>
                                 <div className="flex items-center gap-2">
-                                    <code className="flex-1 p-2 rounded bg-muted text-xs break-all">{window.location.href}</code>
-                                    <Button size="sm" variant="ghost" className="shrink-0" onClick={copyRoomLink}>
+                                    <code className="flex-1 p-2 rounded bg-muted text-xs break-all">
+                                        {getRoomId()}
+                                    </code>
+                                    <Button size="sm" variant="ghost" className="shrink-0" onClick={copyRoomId}>
                                         <Copy className="h-4 w-4" />
                                     </Button>
                                 </div>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Share this Room ID with others so they can join.
+                                </p>
                             </div>
                             <div className="space-y-2">
                                 <h3 className="font-medium">Participants ({participantIds.length})</h3>

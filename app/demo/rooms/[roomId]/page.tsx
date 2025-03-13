@@ -23,7 +23,6 @@ export default function RoomPage({params}) {
         const dailyUrl = `${process.env.NEXT_PUBLIC_DAILY_SUBDOMAIN}.daily.co/${roomId}`
         setUrl(dailyUrl)
 
-        // Fetch the meeting token
         fetch(`/api/rooms/${roomId}/tokens`, {
             method: "POST",
             headers: {

@@ -8,7 +8,6 @@ interface RoomStore {
     isRecording: boolean
     isSharingScreen: boolean
     meetingStartTime: Date | null
-    translations: Translation[]
     preferences: {
         showTranslations: boolean
         targetLanguage: string
@@ -21,7 +20,6 @@ interface RoomStore {
     setRecording: (isRecording: boolean) => void
     setScreenSharing: (isSharing: boolean) => void
     setMeetingStartTime: (time: Date) => void
-    addTranslation: (translation: Translation) => void
     updatePreferences: (preferences: Partial<RoomStore["preferences"]>) => void
 }
 
@@ -35,7 +33,7 @@ export const useRoomStore = create<RoomStore>((set) => ({
     translations: [],
     preferences: {
         showTranslations: true,
-        targetLanguage: "en",
+        targetLanguage: "es",
         layout: "speaker",
         audioOnly: false,
     },
