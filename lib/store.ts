@@ -1,5 +1,4 @@
 import { create } from "zustand"
-import type { Translation } from "./types"
 
 interface RoomStore {
     activeSpeakerId: string | null
@@ -30,7 +29,6 @@ export const useRoomStore = create<RoomStore>((set) => ({
     isRecording: false,
     isSharingScreen: false,
     meetingStartTime: null,
-    translations: [],
     preferences: {
         showTranslations: true,
         targetLanguage: "es",
@@ -43,6 +41,5 @@ export const useRoomStore = create<RoomStore>((set) => ({
     setRecording: (isRecording) => set({ isRecording }),
     setScreenSharing: (isSharing) => set({ isSharingScreen: isSharing }),
     setMeetingStartTime: (time) => set({ meetingStartTime: time }),
-    addTranslation: (translation) => set((state) => ({ translations: [...state.translations, translation] })),
     updatePreferences: (preferences) => set((state) => ({ preferences: { ...state.preferences, ...preferences } })),
 }))

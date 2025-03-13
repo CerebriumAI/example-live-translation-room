@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server"
+import {NextRequest, NextResponse} from "next/server"
 import { createRoomSchema } from "@/lib/schemas"
 
 const DAILY_API_URL = "https://api.daily.co/v1"
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
         const result = createRoomSchema.safeParse(body)
@@ -13,11 +13,6 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: errorMessage }, { status: 400 })
         }
 
-        console.log('Test')
-
-        const { name } = result.data
-
-        // Create a new room using Daily.co REST API
         const response = await fetch(`${DAILY_API_URL}/rooms`, {
             method: "POST",
             headers: {
@@ -38,7 +33,7 @@ export async function POST(request: Request) {
 
         const room = await response.json()
 
-        return NextResponse.json({ roomId: room.name }, { status: 201 })
+        return NextResponse.json({ roomId: room.name }, { status: 200 })
     } catch (error) {
         console.error("Error creating room:", error)
         return NextResponse.json({ error: "Failed to create room" }, { status: 500 })

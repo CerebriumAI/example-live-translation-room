@@ -1,17 +1,17 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { useSearchParams} from "next/navigation"
+import {useParams, useSearchParams} from "next/navigation"
 import { DailyProvider } from "@daily-co/daily-react"
 import VideoRoom from "@/components/video-room"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
-export default function RoomPage({params}) {
+export default function RoomPage() {
+    const {roomId} = useParams<{roomId: string}>();
     const [url, setUrl] = useState("")
     const [token, setToken] = useState("")
     const [error, setError] = useState("")
     const searchParams = useSearchParams()
-    const {roomId} = React.use(params);
     const name = searchParams.get("name")
 
     useEffect(() => {
@@ -61,9 +61,11 @@ export default function RoomPage({params}) {
         )
     }
 
+    console.log('bruh')
+
     return (
         <DailyProvider url={url} token={token}>
-            <VideoRoom roomName="Meeting" userName={name || "Guest"} />
+            <VideoRoom roomName="Meeting" userName={name || "Guest"} url={url} />
         </DailyProvider>
     )
 }

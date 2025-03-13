@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useRef, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import {useParams, useRouter, useSearchParams} from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -21,10 +21,10 @@ interface DeviceError {
     message: string
 }
 
-export default function HairCheckPage({ params }) {
+export default function HairCheckPage() {
+    const {roomId} = useParams<{roomId: string}>()
     const router = useRouter()
     const searchParams = useSearchParams()
-    const { roomId } = React.use(params)
     const name = searchParams.get("name")
 
     const [cameras, setCameras] = useState<MediaDevice[]>([])
@@ -147,7 +147,8 @@ export default function HairCheckPage({ params }) {
 
                 // Clear any previous camera/mic errors
                 setErrors((prev) => prev.filter((error) => error.type !== "camera" && error.type !== "microphone"))
-            } catch (err) {
+            } catch (error) {
+                console.error(error)
                 setErrors((prev) => [
                     ...prev,
                     {
@@ -171,7 +172,8 @@ export default function HairCheckPage({ params }) {
                 audioTestRef.current.pause()
                 audioTestRef.current.currentTime = 0
             }
-        } catch (err) {
+        } catch (error) {
+            console.error(error)
             setErrors((prev) => [
                 ...prev,
                 {
@@ -194,9 +196,10 @@ export default function HairCheckPage({ params }) {
             }
 
             router.push(
-                `/demo/rooms/${roomId}?name=${encodeURIComponent(name)}&cameraId=${selectedCamera}&microphoneId=${selectedMicrophone}&volume=${volume}`,
+                `/demo/rooms/${roomId}?name=${encodeURIComponent(name || 'guest')}&cameraId=${selectedCamera}&microphoneId=${selectedMicrophone}&volume=${volume}`,
             )
-        } catch (err) {
+        } catch (error) {
+            console.error(error)
             setErrors([{ type: "general", message: "Failed to join room. Please try again." }])
         }
     }
@@ -314,11 +317,12 @@ export default function HairCheckPage({ params }) {
                                     </SelectContent>
                                 </Select>
                             </div>
-
-                            <div className="space-y-1.5">
-                                <Label>Translation Language</Label>
-                                <LanguageSelector/>
-                                <p className="text-xs text-muted-foreground">Select the language you want to hear</p>
+                            <div className="grid grid-cols-2 justify-start space-1.5">
+                                <div className="space-y-1">
+                                    <Label>Translation Language</Label>
+                                    <LanguageSelector/>
+                                    <p className="text-xs text-muted-foreground">Language you will hear</p>
+                                </div>
                             </div>
                         </div>
 

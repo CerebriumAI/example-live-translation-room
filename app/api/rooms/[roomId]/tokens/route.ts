@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server"
+import {NextRequest, NextResponse} from "next/server"
 import { roomIdSchema, nameSchema } from "@/lib/schemas"
 
 const DAILY_API_URL = "https://api.daily.co/v1"
 
-export async function POST(request: Request, { params }: { params: { roomId: string } }) {
-    const {roomId} = await params;
+export async function POST(request: NextRequest, { params }: { params: Promise<{ roomId: string }>}) {
+    const {roomId} = await params
     const roomIdResult = roomIdSchema.safeParse(roomId)
 
     if (!roomIdResult.success) {

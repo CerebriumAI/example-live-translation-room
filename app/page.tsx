@@ -76,7 +76,7 @@ export default function LandingPage() {
                     <div>
                         <h3 className="font-semibold">High-Quality Video Calls</h3>
                         <p className="mt-4 text-muted-foreground">
-                            Built on Daily.co's robust video infrastructure, enjoy crystal-clear video and audio quality while our
+                            Built on Daily.co&apos;s robust video infrastructure, enjoy crystal-clear video and audio quality while our
                             translation layer works seamlessly in the background.
                         </p>
                     </div>
@@ -104,7 +104,7 @@ export default function LandingPage() {
                             <span className="text-xl font-semibold">Cerebrium</span>
                         </div>
                         <p className="text-center text-sm text-gray-400">
-                            Powered by Cerebrium's AI infrastructure. Deploy and scale AI apps with ease.
+                            Powered by Cerebrium&apos;s AI infrastructure. Deploy and scale AI apps with ease.
                         </p>
                         <div className="flex items-center gap-6">
                             <a
