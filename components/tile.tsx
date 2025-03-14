@@ -6,6 +6,7 @@ import {
     useLocalSessionId,
     useMediaTrack,
     useParticipantProperty,
+    useDaily,
 } from "@daily-co/daily-react"
 import { Mic, MicOff, Globe, User } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -17,7 +18,8 @@ interface TileProps {
 
 export function Tile({ id }: TileProps) {
     const videoRef = useRef<HTMLVideoElement | null>(null)
-    const mediaTrack = useMediaTrack(id, 'video')
+    const videoTrack = useMediaTrack(id, 'video')
+    const audioTrack = useMediaTrack(id, 'audio')
     const activeSpeakerId = useActiveSpeakerId();
     const localSessionId = useLocalSessionId()
     const userName = useParticipantProperty(id, 'user_name')
@@ -29,7 +31,7 @@ export function Tile({ id }: TileProps) {
     const translatorInfo = parseTranslatorInfo(userName);
 
     useEffect(() => {
-        if (!mediaTrack.track || !videoRef.current) {
+        if (!videoRef.current) {
             setVideoLoaded(false)
             return
         }
@@ -37,7 +39,21 @@ export function Tile({ id }: TileProps) {
         setVideoLoaded(false)
 
         try {
-            videoRef.current.srcObject = new MediaStream([mediaTrack.track])
+            // Create a new MediaStream
+            const stream = new MediaStream()
+
+            // Add video track if available
+            if (videoTrack.track) {
+                stream.addTrack(videoTrack.track)
+            }
+
+            // Add audio track if available and not local participant
+            if (audioTrack.track && !isLocal) {
+                stream.addTrack(audioTrack.track)
+            }
+
+            // Set the combined stream as the source
+            videoRef.current.srcObject = stream
 
             const handleVideoLoaded = () => {
                 setVideoLoaded(true)
@@ -52,9 +68,9 @@ export function Tile({ id }: TileProps) {
                 }
             }
         } catch (err) {
-            console.error("Error setting video source:", err)
+            console.error("Error setting media source:", err)
         }
-    }, [mediaTrack.track])
+    }, [videoTrack.track, audioTrack.track, isLocal])
 
     if (translatorInfo?.isTranslator) {
         const translatorInfo = parseTranslatorInfo(userName)
@@ -90,7 +106,7 @@ export function Tile({ id }: TileProps) {
         )
     }
 
-    if (!videoLoaded && mediaTrack.state !== "playable") {
+    if (!videoLoaded && videoTrack.state !== "playable") {
         return (
             <div
                 className={cn(
@@ -123,7 +139,13 @@ export function Tile({ id }: TileProps) {
                 isSpeaking && "ring-2 ring-primary ring-offset-2",
             )}
         >
-            <video ref={videoRef} autoPlay playsInline muted={isLocal} className="w-full h-full object-cover" />
+            <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted={isLocal}
+                className="w-full h-full object-cover"
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 hover:opacity-100 transition-opacity">
                 <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
                     <div className="flex items-center gap-2">
