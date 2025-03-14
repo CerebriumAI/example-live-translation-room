@@ -61,8 +61,6 @@ export default function RoomPage() {
         )
     }
 
-    console.log('bruh')
-
     return (
         <DailyProvider url={url} token={token}>
             <VideoRoom roomName="Meeting" userName={name || "Guest"} url={url} />

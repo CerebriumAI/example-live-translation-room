@@ -16,8 +16,6 @@ export function MainView({
     const local = useParticipantProperty(participantId || '', 'local')
     const audio = useParticipantProperty(participantId || '', 'audio')
 
-    console.log(userName, local, audio)
-
     if (!userName) {
         return (
             <div className="flex items-center justify-center h-full bg-muted">

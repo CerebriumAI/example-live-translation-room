@@ -8,7 +8,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 export function RoomHeader({ roomName }: { roomName: string }) {
     const participantIds = useParticipantIds()
 
-    // Extract the room ID from the current URL
     const getRoomId = () => {
         const pathParts = window.location.pathname.split('/')
         return pathParts[pathParts.length - 1]

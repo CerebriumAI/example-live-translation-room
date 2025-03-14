@@ -1,22 +1,47 @@
 "use client"
 
-import React, { useState, useCallback } from "react"
-import { useParticipantIds, useDailyEvent, useLocalSessionId, useDaily } from "@daily-co/daily-react"
+import React, { useState, useCallback, useEffect } from "react"
+import { useParticipantIds, useDailyEvent, useDaily } from "@daily-co/daily-react"
 import { UserMediaError } from "./user-media-error"
 import { Tile } from "./tile"
 import { Controls } from "./controls"
 import { RoomHeader } from "./room-header"
+import { TranslatorPlaceholder } from "./translator-placeholder"
 import { useRoomStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
 
+export const parseTranslatorInfo = (userName) => {
+    if (!userName || typeof userName !== 'string') return null;
+
+    if (userName.startsWith('Translator-') && userName.includes('__for__')) {
+        const parts = userName.split('__for__');
+        if (parts.length === 2) {
+            const translatorPart = parts[0];
+            const userId = parts[1];
+
+            const language = translatorPart.split('-')[1]; // Extract language
+
+            return {
+                isTranslator: true,
+                language,
+                forUserId: userId
+            };
+        }
+    }
+
+    return null;
+};
+
 export default function VideoRoom({ userName, roomName, url }: { userName: string; roomName: string, url: string }) {
     const [getUserMediaError, setGetUserMediaError] = useState(false)
+    const [isTranslationLoading, setIsTranslationLoading] = useState(false)
+    const [translatorFound, setTranslatorFound] = useState(false)
     const daily = useDaily()
     const participantIds = useParticipantIds()
-    const localSessionId = useLocalSessionId()
+    const [userId, setUserId] = useState('')
     const { setActiveSpeaker, setMeetingStartTime, preferences } = useRoomStore()
+    const targetLanguage = preferences?.targetLanguage || 'en'
 
-    // Handle camera/microphone errors
     useDailyEvent(
         "camera-error",
         useCallback(() => {
@@ -24,7 +49,6 @@ export default function VideoRoom({ userName, roomName, url }: { userName: strin
         }, []),
     )
 
-    // Handle active speaker updates
     useDailyEvent(
         "active-speaker-change",
         useCallback(
@@ -34,16 +58,57 @@ export default function VideoRoom({ userName, roomName, url }: { userName: strin
             [setActiveSpeaker],
         ),
     )
-    // Start translation service for this user
+
+    useEffect(() => {
+        console.log("Translation loading:", isTranslationLoading);
+        console.log("Translator found:", translatorFound);
+        console.log("Participant count:", participantIds.length);
+    }, [isTranslationLoading, translatorFound, participantIds.length]);
+
+    useEffect(() => {
+        if (!daily || !userId) return
+
+        const checkForTranslator = () => {
+            const allParticipants = daily.participants();
+            let found = false;
+
+            for (const id in allParticipants) {
+                const participant = allParticipants[id];
+                const userName = participant?.user_name;
+
+                const translatorInfo = parseTranslatorInfo(userName);
+
+                if (translatorInfo && translatorInfo.forUserId === userId) {
+                    found = true;
+                    break;
+                }
+            }
+
+            setTranslatorFound(found);
+        }
+
+        checkForTranslator();
+
+        const handleParticipantChange = () => {
+            checkForTranslator();
+        }
+
+        daily.on('participant-joined', handleParticipantChange);
+        daily.on('participant-updated', handleParticipantChange);
+
+        return () => {
+            daily.off('participant-joined', handleParticipantChange);
+            daily.off('participant-updated', handleParticipantChange);
+        }
+    }, [daily, userId]);
+
     const startTranslationService = useCallback(async () => {
-        if (!daily) return;
+        if (!daily || !userId) return;
+        console.log('Starting translation service');
 
         try {
-            const targetLanguage = preferences.targetLanguage || 'en'
+            setIsTranslationLoading(true);
 
-            console.log('Room url:', url, 'Target language:', targetLanguage, "User id:", localSessionId)
-
-            // Start the translation service with a unique identifier for this user
             const response = await fetch(process.env.NEXT_PUBLIC_CEREBRIUM_URL || '', {
                 method: 'POST',
                 headers: {
@@ -54,15 +119,22 @@ export default function VideoRoom({ userName, roomName, url }: { userName: strin
                     room_url: url,
                     target_language: targetLanguage,
                     user_name: userName,
-                    user_id: localSessionId
+                    user_id: userId
                 }),
             });
 
             await response.json();
+
         } catch (err) {
             console.error('Failed to start translation service:', err);
+            setIsTranslationLoading(false);
         }
-    }, [daily, localSessionId]);
+    }, [userId]);
+
+    React.useEffect(() => {
+        if (!userId) return;
+        startTranslationService();
+    }, [userId])
 
     React.useEffect(() => {
         if (!daily) return
@@ -70,10 +142,10 @@ export default function VideoRoom({ userName, roomName, url }: { userName: strin
         const join = async () => {
             try {
                 const result = await daily.join({ userName })
-                console.log(result)
+                if (result.local) {
+                    setUserId(result.local.user_id)
+                }
                 setMeetingStartTime(new Date())
-
-                await startTranslationService();
             } catch (err) {
                 console.error("Failed to join room:", err)
                 setGetUserMediaError(true)
@@ -85,19 +157,27 @@ export default function VideoRoom({ userName, roomName, url }: { userName: strin
         return () => {
             daily.leave()
         }
-    }, [daily, userName])
+    }, [daily])
+
+    useEffect(() => {
+        if (translatorFound && isTranslationLoading) {
+            setIsTranslationLoading(false)
+        }
+    }, [translatorFound, isTranslationLoading])
 
     const getGridLayout = (count: number) => {
-        if (count <= 1) return "grid-cols-1"
-        if (count === 2) return "grid-cols-2"
-        if (count <= 4) return "grid-cols-2 grid-rows-2"
-        if (count <= 6) return "grid-cols-3 grid-rows-2"
-        if (count <= 9) return "grid-cols-3 grid-rows-3"
+        const adjustedCount = isTranslationLoading && !translatorFound ? count + 1 : count;
+
+        if (adjustedCount <= 1) return "grid-cols-1"
+        if (adjustedCount === 2) return "grid-cols-2"
+        if (adjustedCount <= 4) return "grid-cols-2 grid-rows-2"
+        if (adjustedCount <= 6) return "grid-cols-3 grid-rows-2"
+        if (adjustedCount <= 9) return "grid-cols-3 grid-rows-3"
         return "grid-cols-4 grid-rows-3" // Max 12 participants
     }
 
     const renderCallScreen = () => (
-        <div className="h-screen flex flex-col overflow-hidden ">
+        <div className="h-screen flex flex-col overflow-hidden relative">
             <RoomHeader roomName={roomName} />
 
             <main className="flex-1 min-h-0 p-4">
@@ -105,6 +185,15 @@ export default function VideoRoom({ userName, roomName, url }: { userName: strin
                     {participantIds.map((id) => (
                         <Tile key={id} id={id} />
                     ))}
+
+                    {isTranslationLoading && !translatorFound && (
+                        <TranslatorPlaceholder
+                            targetLanguage={targetLanguage}
+                            userName={userName}
+                            isTranslationLoading={isTranslationLoading}
+                            setIsTranslationLoading={setIsTranslationLoading}
+                        />
+                    )}
                 </div>
             </main>
 
