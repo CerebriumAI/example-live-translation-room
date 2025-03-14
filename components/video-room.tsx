@@ -9,9 +9,10 @@ import { RoomHeader } from "./room-header"
 import { TranslatorPlaceholder } from "./translator-placeholder"
 import { useRoomStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
+import {DailyParticipantsObject} from "@daily-co/daily-js";
 
-export const parseTranslatorInfo = (userName) => {
-    if (!userName || typeof userName !== 'string') return null;
+export const parseTranslatorInfo = (userName: string) => {
+    if (!userName) return null;
 
     if (userName.startsWith('Translator-') && userName.includes('__for__')) {
         const parts = userName.split('__for__');
@@ -76,7 +77,7 @@ export default function VideoRoom({ userName, roomName, url }: { userName: strin
                 const participant = allParticipants[id];
                 const userName = participant?.user_name;
 
-                const translatorInfo = parseTranslatorInfo(userName);
+                const translatorInfo = parseTranslatorInfo(userName || '');
 
                 if (translatorInfo && translatorInfo.forUserId === userId) {
                     found = true;
@@ -141,7 +142,7 @@ export default function VideoRoom({ userName, roomName, url }: { userName: strin
 
         const join = async () => {
             try {
-                const result = await daily.join({ userName })
+                const result = await daily.join({ userName }) as DailyParticipantsObject
                 if (result.local) {
                     setUserId(result.local.user_id)
                 }

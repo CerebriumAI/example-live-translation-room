@@ -29,15 +29,12 @@ export function TranslatorPlaceholder({
         const findUserTranslator = () => {
             const allParticipants = daily.participants()
 
-            console.log(allParticipants)
 
             for (const id in allParticipants) {
-                const participant = allParticipants[id];
-                console.log(id)
                 const translatorInfo = parseTranslatorInfo(userName)
 
                 if (
-                    translatorInfo?.isTranslator  &&
+                    translatorInfo?.isTranslator &&
                     translatorInfo.forUserId === localSessionId
                 ) {
                     setHasFoundTranslator(true)
@@ -46,7 +43,8 @@ export function TranslatorPlaceholder({
                         setIsTranslationLoading(false)
                     }
 
-                    return
+                    if (id)
+                        return
                 }
             }
 
