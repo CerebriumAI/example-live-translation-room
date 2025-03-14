@@ -1,100 +1,110 @@
-"use client"
+"use client";
 
-import React from "react"
-import { useDaily, useLocalSessionId } from "@daily-co/daily-react"
-import { Loader2 } from "lucide-react"
-import { cn } from "@/lib/utils"
-import {parseTranslatorInfo} from "@/components/video-room";
+import React from "react";
+import { useDaily, useLocalSessionId } from "@daily-co/daily-react";
+import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { parseTranslatorInfo } from "@/components/video-room";
 
 interface TranslatorPlaceholderProps {
-    targetLanguage: string;
-    userName: string;
-    isTranslationLoading: boolean;
-    setIsTranslationLoading: (loading: boolean) => void;
+  targetLanguage: string;
+  userName: string;
+  isTranslationLoading: boolean;
+  setIsTranslationLoading: (loading: boolean) => void;
 }
 
 export function TranslatorPlaceholder({
-                                          targetLanguage = 'en',
-                                          userName,
-                                          isTranslationLoading,
-                                          setIsTranslationLoading
-                                      }: TranslatorPlaceholderProps) {
-    const daily = useDaily()
-    const localSessionId = useLocalSessionId()
-    const [hasFoundTranslator, setHasFoundTranslator] = React.useState(false)
+  targetLanguage = "en",
+  userName,
+  isTranslationLoading,
+  setIsTranslationLoading,
+}: TranslatorPlaceholderProps) {
+  const daily = useDaily();
+  const localSessionId = useLocalSessionId();
+  const [hasFoundTranslator, setHasFoundTranslator] = React.useState(false);
 
-    React.useEffect(() => {
-        if (!daily || !localSessionId) return
+  React.useEffect(() => {
+    if (!daily || !localSessionId) return;
 
-        const findUserTranslator = () => {
-            const allParticipants = daily.participants()
+    const findUserTranslator = () => {
+      const allParticipants = daily.participants();
 
+      for (const id in allParticipants) {
+        const translatorInfo = parseTranslatorInfo(userName);
 
-            for (const id in allParticipants) {
-                const translatorInfo = parseTranslatorInfo(userName)
+        if (
+          translatorInfo?.isTranslator &&
+          translatorInfo.forUserId === localSessionId
+        ) {
+          setHasFoundTranslator(true);
 
-                if (
-                    translatorInfo?.isTranslator &&
-                    translatorInfo.forUserId === localSessionId
-                ) {
-                    setHasFoundTranslator(true)
+          if (isTranslationLoading) {
+            setIsTranslationLoading(false);
+          }
 
-                    if (isTranslationLoading) {
-                        setIsTranslationLoading(false)
-                    }
-
-                    if (id)
-                        return
-                }
-            }
-
-            setHasFoundTranslator(false)
+          if (id) return;
         }
+      }
 
-        findUserTranslator()
+      setHasFoundTranslator(false);
+    };
 
-        const handleParticipantChange = () => {
-            findUserTranslator()
-        }
+    findUserTranslator();
 
-        daily.on('participant-joined', handleParticipantChange)
-        daily.on('participant-updated', handleParticipantChange)
+    const handleParticipantChange = () => {
+      findUserTranslator();
+    };
 
-        return () => {
-            daily.off('participant-joined', handleParticipantChange)
-            daily.off('participant-updated', handleParticipantChange)
-        }
-    }, [daily, localSessionId, isTranslationLoading, setIsTranslationLoading])
+    daily.on("participant-joined", handleParticipantChange);
+    daily.on("participant-updated", handleParticipantChange);
 
-    if (hasFoundTranslator) {
-        return null
-    }
+    return () => {
+      daily.off("participant-joined", handleParticipantChange);
+      daily.off("participant-updated", handleParticipantChange);
+    };
+  }, [daily, localSessionId, isTranslationLoading, setIsTranslationLoading]);
 
-    if (isTranslationLoading) {
-        const bgColor = targetLanguage === 'en' ? "bg-blue-500" :
-            targetLanguage === 'es' ? "bg-red-500" : "bg-gray-500";
-        const languageText = targetLanguage === 'en' ? 'English' :
-            targetLanguage === 'es' ? 'Spanish' : '';
+  if (hasFoundTranslator) {
+    return null;
+  }
 
-        return (
-            <div className="relative w-full h-full rounded-lg overflow-hidden bg-slate-200">
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
-                    <div className={cn(
-                        "w-16 h-16 rounded-full flex items-center justify-center text-white mb-2",
-                        bgColor
-                    )}>
-                        <Loader2 className="h-8 w-8 animate-spin" />
-                    </div>
-                    <div className="text-center">
-                        <p className="font-medium">{userName} (Translator-{targetLanguage})</p>
-                        <p className="text-sm text-gray-600">
-                            {languageText} translation connecting...
-                        </p>
-                    </div>
-                </div>
-            </div>
-        )
-    }
+  if (isTranslationLoading) {
+    const bgColor =
+      targetLanguage === "en"
+        ? "bg-blue-500"
+        : targetLanguage === "es"
+          ? "bg-red-500"
+          : "bg-gray-500";
+    const languageText =
+      targetLanguage === "en"
+        ? "English"
+        : targetLanguage === "es"
+          ? "Spanish"
+          : "";
 
-    return null
+    return (
+      <div className="relative w-full h-full rounded-lg overflow-hidden bg-slate-200">
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
+          <div
+            className={cn(
+              "w-16 h-16 rounded-full flex items-center justify-center text-white mb-2",
+              bgColor,
+            )}
+          >
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+          <div className="text-center">
+            <p className="font-medium">
+              {userName} (Translator-{targetLanguage})
+            </p>
+            <p className="text-sm text-gray-600">
+              {languageText} translation connecting...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
 }
