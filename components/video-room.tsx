@@ -142,7 +142,7 @@ export default function VideoRoom({ userName, roomName, url }: { userName: strin
 
         const join = async () => {
             try {
-                const result = await daily.join({ userName }) as DailyParticipantsObject
+                const result = await daily.join({ userName, userData: {language: targetLanguage} }) as DailyParticipantsObject
                 if (result.local) {
                     setUserId(result.local.user_id)
                 }
